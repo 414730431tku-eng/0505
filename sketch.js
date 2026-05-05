@@ -1,43 +1,43 @@
 let video;
 let faceMesh;
 let faces = [];
-let triangles;
+let triangles = []; // ✅ 初始化為空陣列，防止 draw() 報錯
 
 let modelReady = false;
 let webglSupported = true;
 
+// 1. 移除 preload 內的 ml5 初始化，改為空白或處理其他素材
 function preload() {
-  try {
-    // 初始化模型
-    faceMesh = ml5.faceMesh({ maxFaces: 1, flipped: true });
-  } catch (e) {
-    console.log("ml5 載入失敗", e);
-  }
+  // 原本這裡的 ml5 初始化建議移除
 }
 
+// 2. 在 setup 內進行非同步初始化
 function setup() {
-  // ✅ 檢查 WebGL 支援
-  webglSupported = checkWebGL();
+  webglSupported = checkWebGL(); //
+  createCanvas(windowWidth, windowHeight); //[cite: 3]
 
-  createCanvas(windowWidth, windowHeight);
-
-  // 建立攝影機
+  // 建立攝影機[cite: 3]
   video = createCapture(VIDEO, { flipped: true });
-  video.size(width * 0.5, height * 0.5);
-  video.hide();
+  video.size(width * 0.5, height * 0.5); //[cite: 3]
+  video.hide(); //[cite: 3]
 
-  if (webglSupported && faceMesh) {
-    try {
-      faceMesh.detectStart(video, gotFaces);
-      triangles = faceMesh.getTriangles();
-      modelReady = true;
-    } catch (e) {
-      console.log("模型啟動失敗", e);
-      modelReady = false;
-    }
+  // ✅ 正確的 ml5 v1.0 初始化流程
+  if (typeof ml5 !== 'undefined') {
+    // 建立 faceMesh 物件，並傳入回呼函式[cite: 3]
+    faceMesh = ml5.faceMesh({ maxFaces: 1, flipped: true }, () => {
+      console.log("模型載入成功！");
+      
+      // 模型準備好後，才開始偵測與獲取三角形索引
+      faceMesh.detectStart(video, gotFaces); //[cite: 3]
+      triangles = faceMesh.getTriangles(); //[cite: 3]
+      modelReady = true; //[cite: 3]
+    });
+  } else {
+    console.error("錯誤：找不到 ml5 函式庫，請檢查 index.html 是否有引用 CDN");
   }
 }
 
+// ... 後半部的 gotFaces, draw, checkWebGL 保持原樣即可[cite: 3]
 function gotFaces(results) {
   faces = results;
 }
